@@ -208,4 +208,53 @@
   window.addEventListener('load', navmenuScrollspy);
   document.addEventListener('scroll', navmenuScrollspy);
 
+  // Form işlemleri
+  const contactForms = document.querySelectorAll('.php-email-form');
+  
+  if (contactForms.length > 0) {
+    contactForms.forEach(function(form) {
+      form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        const thisForm = this;
+        const formAction = thisForm.getAttribute('action');
+        const formData = new FormData(thisForm);
+        
+        thisForm.querySelector('.loading').classList.add('d-block');
+        thisForm.querySelector('.error-message').classList.remove('d-block');
+        thisForm.querySelector('.sent-message').classList.remove('d-block');
+        
+        fetch(formAction, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          }
+          throw new Error(`${response.status} ${response.statusText} ${response.url}`);
+        })
+        .then(data => {
+          thisForm.querySelector('.loading').classList.remove('d-block');
+          
+          if (data.success) {
+            thisForm.querySelector('.sent-message').innerHTML = data.message;
+            thisForm.querySelector('.sent-message').classList.add('d-block');
+            thisForm.reset();
+          } else {
+            throw new Error(data.message || 'Form gönderimi başarısız!');
+          }
+        })
+        .catch(error => {
+          thisForm.querySelector('.loading').classList.remove('d-block');
+          thisForm.querySelector('.error-message').innerHTML = error.message;
+          thisForm.querySelector('.error-message').classList.add('d-block');
+        });
+      });
+    });
+  }
+
 })();
